@@ -1,3 +1,8 @@
+Бот может сканировать любой эфириум кошелек и показывать его баланс в Эфирах
+_______
+Научил бот переводить деньги через скрипт sendTx.js.
+Там была ошибка, потому что было указано перевести 1 эфир, а на балансе было всего 0,6 эфира.
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
