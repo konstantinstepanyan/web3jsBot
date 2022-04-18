@@ -14,7 +14,9 @@
     "next": "12.1.4",
     "react": "18.0.0",
     "react-dom": "18.0.0",
-    "web3": "^1.7.3"
+    "solc": "^0.8.13",
+    "web3": "^1.7.3",
+    "contracts": "file:./pages/contracts"
   },
   "devDependencies": {
     "eslint": "8.13.0",
