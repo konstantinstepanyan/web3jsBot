@@ -6,68 +6,65 @@ import DistributionJSON from './contracts/distribution.json';
 
 function MyApp({ Component, pageProps }) {
 
-  //npm install web3 --save  
-  const Web3 = require("web3");
-
-  const myWallet = "0x0A82A3138191D5958F47b4b05483fa0D4DF995d9"; //myAddress
-  const sendTo = "0x679C8a1D8761571278D7830059b61f910Dc3f09c"; //на смарт
-
-
-
-  //ссылка для основной сети
-  //const web3 = new Web3(new Web3.providers.HttpProvider("https://mainnet.infura.io/v3/8c1d65765fbe49eab889cca49c4906c4"))
-
-  //ссылка для тестовой сети Rinkeby
-  const web3 = new Web3(new Web3.providers.HttpProvider("https://rinkeby.infura.io/v3/8c1d65765fbe49eab889cca49c4906c4"))
-  let balance = web3.eth.getBalance(myWallet);
-  let balanceETH;
-
-
-  const networkId = web3.eth.net.getId();
-
-
-  const Contract = new web3.eth.Contract(
-    [
-      {
-        "inputs": [],
-        "stateMutability": "payable",
-        "type": "constructor"
-      },
-      {
-        "inputs": [],
-        "name": "getBalance",
-        "outputs": [
-          {
-            "internalType": "uint256",
-            "name": "",
-            "type": "uint256"
-          }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-      },
-      {
-        "inputs": [],
-        "name": "receiveFunds",
-        "outputs": [],
-        "stateMutability": "payable",
-        "type": "function"
-      },
-      {
-        "inputs": [],
-        "name": "withdrawFunds",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-      }
-    ],
-    '0x679C8a1D8761571278D7830059b61f910Dc3f09c' //from remixIDE 
-  );
-  //connect to contract, abi - is json description of Contract, address - is where in blockchain Contract is deployed
-
-
 
   if (typeof window !== "undefined") {
+
+    //npm install web3 --save  
+    const Web3 = require("web3");
+
+    const myWallet = "0x0A82A3138191D5958F47b4b05483fa0D4DF995d9"; //myAddress
+    const sendTo = "0x679C8a1D8761571278D7830059b61f910Dc3f09c"; //на смарт
+
+    //ссылка для основной сети
+    //const web3 = new Web3(new Web3.providers.HttpProvider("https://mainnet.infura.io/v3/8c1d65765fbe49eab889cca49c4906c4"))
+
+    //ссылка для тестовой сети Rinkeby
+    const web3 = new Web3(new Web3.providers.HttpProvider("https://rinkeby.infura.io/v3/8c1d65765fbe49eab889cca49c4906c4"))
+    let balance = web3.eth.getBalance(myWallet);
+    let balanceETH;
+
+    const networkId = web3.eth.net.getId();
+
+    const Contract = new web3.eth.Contract(
+      [
+        {
+          "inputs": [],
+          "stateMutability": "payable",
+          "type": "constructor"
+        },
+        {
+          "inputs": [],
+          "name": "getBalance",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "receiveFunds",
+          "outputs": [],
+          "stateMutability": "payable",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "withdrawFunds",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        }
+      ],
+      '0x679C8a1D8761571278D7830059b61f910Dc3f09c' //from remixIDE 
+    );
+    //connect to contract, abi - is json description of Contract, address - is where in blockchain Contract is deployed
+
+
     const sendEthButton = document.querySelector('.sendEthButton');
     console.log(sendEthButton)
 
