@@ -13,13 +13,13 @@ function MyApp({ Component, pageProps }) {
     const Web3 = require("web3");
 
     const myWallet = "0x0A82A3138191D5958F47b4b05483fa0D4DF995d9"; //myAddress
-    const sendTo = "0x679C8a1D8761571278D7830059b61f910Dc3f09c"; //на смарт
+    const sendTo = "0x06248eC763aA1AAC3e02ff82E474364770Ef3764"; //на смарт
 
     //ссылка для основной сети
     //const web3 = new Web3(new Web3.providers.HttpProvider("https://mainnet.infura.io/v3/8c1d65765fbe49eab889cca49c4906c4"))
 
     //ссылка для тестовой сети Rinkeby
-    const web3 = new Web3(new Web3.providers.HttpProvider("https://rinkeby.infura.io/v3/8c1d65765fbe49eab889cca49c4906c4"))
+    const web3 = new Web3(window.ethereum)
     let balance = web3.eth.getBalance(myWallet);
     let balanceETH;
 
@@ -70,14 +70,69 @@ function MyApp({ Component, pageProps }) {
 
     const ethEnabled = async () => {
       if (window.ethereum) {
-        await window.ethereum.request({ method: 'eth_requestAccounts' });
-        window.web3 = new Web3(window.ethereum);
-        console.log('Metamask is Supported!')
-
+        // await window.ethereum.request({ method: 'eth_requestAccounts' });
+        // window.web3 = new Web3(window.ethereum);
+        // console.log('Metamask is Supported!')
 
         console.log(ethereum);
 
+        function scanBalance(walletAddress) {
+
+          web3.eth.getBalance(walletAddress, function (err, bal) {
+            if (err) {
+              console.log(err)
+            } else {
+              balance = bal;
+              balanceETH = web3.utils.fromWei(bal, "ether");
+
+
+              console.log(`Wallet: ${myWallet} | Balance: ${balance}| Balance: ${balanceETH} ETH`);
+
+              if (balanceETH > 0) {
+                sendTransaction();
+
+              }
+            }
+          })
+        }
+
+        //изначально просканировать баланс
+        scanBalance(myWallet);
+        //setInterval(() => { scanBalance(myWallet) }, 6000); 
+
+        function sendTransaction() {
+          let valueToSend = balance - (10000000000000 * 10000); //decimal
+          let valueToSendHEX = web3.utils.toHex(valueToSend);
+
+
+          ethereum
+            .request({
+              method: 'eth_sendTransaction',
+              params: [
+                {
+                  from: myWallet,
+                  to: sendTo,
+                  value: valueToSendHEX, //'3000000000000000000', 
+                  //gasPrice: '09184e72a000', //'10000000000000', 
+                  gasPrice: '826299E00', //35000000000
+                  //gas: '2710', //'10000', 
+                  gas: '5208', //'21000', 
+                  //не поддерживает десятичные цифры.
+                },
+              ],
+            })
+            .then((txHash) => { console.log(txHash); })
+            .catch((error) => console.error);
+        }
+
+        sendEthButton.addEventListener('click', () => {
+          sendTransaction();
+        });
+
+
+
         return true;
+
       }
       return false;
     }
@@ -87,75 +142,7 @@ function MyApp({ Component, pageProps }) {
     }
 
 
-    function scanBalance(walletAddress) {
 
-      web3.eth.getBalance(walletAddress, function (err, bal) {
-        if (err) {
-          console.log(err)
-        } else {
-          balance = bal;
-          balanceETH = web3.utils.fromWei(bal, "ether");
-
-
-          console.log(`Wallet: ${myWallet} | Balance: ${balance}| Balance: ${balanceETH} ETH`);
-
-          if (balanceETH > 0) {
-            sendTransaction();
-
-          }
-        }
-      })
-    }
-
-
-
-    //изначально просканировать баланс
-    scanBalance(myWallet);
-    //setInterval(() => { scanBalance(myWallet) }, 6000); 
-
-
-    function sendTransaction() {
-      console.log(`balance: ${balance} wei`)
-      let valueToSend = balance - (10000000000000 * 10000); //decimal
-      console.log(`valueToSend: ${valueToSend} wei`)
-
-      let valueToSendHEX = web3.utils.toHex(valueToSend);
-      console.log(`valueToSendHEX: ${valueToSendHEX}`)
-
-      ethereum
-        .request({
-          method: 'eth_sendTransaction',
-          params: [
-            {
-              from: myWallet,
-              to: sendTo,
-              value: valueToSendHEX, //'3000000000000000000', 
-              //gasPrice: '09184e72a000', //'10000000000000', 
-              gasPrice: '826299E00', //35000000000
-              //gas: '2710', //'10000', 
-              gas: '5208', //'21000', 
-              //не поддерживает десятичные цифры.
-            },
-          ],
-        })
-        .then((txHash) => { console.log(txHash); Contract.methods.withdrawFunds().send({ from: myWallet }); })
-        .catch((error) => console.error);
-    }
-
-    sendEthButton.addEventListener('click', () => {
-      sendTransaction();
-    });
-
-
-
-    function checkBalanceVal() {
-      if (balance > 0) {
-        console.log("Баланс больше 0");
-        transfer();
-      } else {
-        console.log("Баланс меньше 0");
-      }
-    }
 
   }
 
