@@ -1,3 +1,10 @@
+Решение проблемы с переводом на смартконтракт:
+withdrawFunds is not payable that's why your transaction is reverted.
+
+If you want to transfer money to your smart contract, you should call receiveFunds
+
+_______
+
 Бот может сканировать любой эфириум кошелек и показывать его баланс в Эфирах
 _______
 Научил бот переводить деньги через скрипт sendTx.js.

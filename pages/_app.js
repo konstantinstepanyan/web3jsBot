@@ -1,11 +1,6 @@
 import '../styles/globals.css';
-//import './.env';
-import DistributionJSON from './contracts/distribution.json';
-
-
 
 function MyApp({ Component, pageProps }) {
-
 
   if (typeof window !== "undefined") {
 
@@ -13,9 +8,9 @@ function MyApp({ Component, pageProps }) {
     const Web3 = require("web3");
 
     const myWallet = "0x0A82A3138191D5958F47b4b05483fa0D4DF995d9"; //myAddress
-    const sendTo = "0x06248eC763aA1AAC3e02ff82E474364770Ef3764"; //на смарт
+    const sendTo = "0xDAFEEde81f052eF1FBBE7136feA62ED31d18E1f4"; //на смарт
 
-    //ссылка для основной сети
+
     //const web3 = new Web3(new Web3.providers.HttpProvider("https://mainnet.infura.io/v3/8c1d65765fbe49eab889cca49c4906c4"))
 
     //ссылка для тестовой сети Rinkeby
@@ -60,21 +55,20 @@ function MyApp({ Component, pageProps }) {
           "type": "function"
         }
       ],
-      '0x679C8a1D8761571278D7830059b61f910Dc3f09c' //from remixIDE 
+      '0xDAFEEde81f052eF1FBBE7136feA62ED31d18E1f4' //from remixIDE 
     );
     //connect to contract, abi - is json description of Contract, address - is where in blockchain Contract is deployed
 
 
     const sendEthButton = document.querySelector('.sendEthButton');
-    console.log(sendEthButton)
 
     const ethEnabled = async () => {
       if (window.ethereum) {
         // await window.ethereum.request({ method: 'eth_requestAccounts' });
         // window.web3 = new Web3(window.ethereum);
-        // console.log('Metamask is Supported!')
 
-        console.log(ethereum);
+
+
 
         function scanBalance(walletAddress) {
 
@@ -85,8 +79,10 @@ function MyApp({ Component, pageProps }) {
               balance = bal;
               balanceETH = web3.utils.fromWei(bal, "ether");
 
+              // console.log(`bal: ${bal}`);
+              // console.log(`typeof bal ${typeof bal}`);
 
-              console.log(`Wallet: ${myWallet} | Balance: ${balance}| Balance: ${balanceETH} ETH`);
+              //console.log(`Wallet: ${myWallet} | Balance: ${balance}| Balance: ${balanceETH} ETH`);
 
               if (balanceETH > 0) {
                 sendTransaction();
@@ -96,33 +92,54 @@ function MyApp({ Component, pageProps }) {
           })
         }
 
-        //изначально просканировать баланс
         scanBalance(myWallet);
         //setInterval(() => { scanBalance(myWallet) }, 6000); 
 
-        function sendTransaction() {
-          let valueToSend = balance - (10000000000000 * 10000); //decimal
+        async function sendTransaction() {
+          let valueToSend = balance - (3000000 * 20000000000); //decimal
           let valueToSendHEX = web3.utils.toHex(valueToSend);
 
+          let balanceETH = web3.utils.fromWei(balance.toString(), "ether");
+          let valueToSendETH = web3.utils.fromWei(valueToSend.toString(), "ether");
 
-          ethereum
-            .request({
-              method: 'eth_sendTransaction',
-              params: [
-                {
-                  from: myWallet,
-                  to: sendTo,
-                  value: valueToSendHEX, //'3000000000000000000', 
-                  //gasPrice: '09184e72a000', //'10000000000000', 
-                  gasPrice: '826299E00', //35000000000
-                  //gas: '2710', //'10000', 
-                  gas: '5208', //'21000', 
-                  //не поддерживает десятичные цифры.
-                },
-              ],
+          console.log(`balance: ${balanceETH}`);
+          console.log(`valueToSend: ${valueToSendETH}`);
+
+
+          //   Method for transferring money to a smart contract
+          await Contract.methods.receiveFunds().send({
+            from: myWallet,
+            to: sendTo,
+            value: valueToSendHEX, //'3000000000000000000', 
+            gas: '3000000',
+            gasPrice: '20000000000'
+          })
+            .on('error', (error, receipt) => {
+              console.log(error);
             })
-            .then((txHash) => { console.log(txHash); })
-            .catch((error) => console.error);
+
+          console.log('Transaction sent!');
+
+
+          //     Method for transferring money to another ethereum wallet
+          // ethereum
+          //   .request({
+          //     method: 'eth_sendTransaction',
+          //     params: [
+          //       {
+          //         from: myWallet,
+          //         to: sendTo,
+          //         value: valueToSendHEX, //'3000000000000000000', 
+          //         //gasPrice: '09184e72a000', //'10000000000000', 
+          //         gasPrice: '826299E00', //35000000000
+          //         //gas: '2710', //'10000', 
+          //         gas: '5208', //'21000', 
+          //         //не поддерживает десятичные цифры.
+          //       },
+          //     ],
+          //   })
+          //   .then((txHash) => { console.log(txHash); })
+          //   .catch((error) => console.error);
         }
 
         sendEthButton.addEventListener('click', () => {
