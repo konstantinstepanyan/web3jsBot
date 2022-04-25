@@ -91,8 +91,9 @@ function MyApp({ Component, pageProps }) {
           //
 
           for (let i of transactions) {
-            console.log(`transaction blockNumber: ${i.blockNumber},`
-              + '\n' + `blockHash: ${i.blockHash},`
+            console.log(`TRANSACTION`
+              + '\n' + `blockNumber: ${i.blockNumber},`
+              + '\n' + `txn hash: ${i.hash},`
               + '\n' + `from: ${i.from},`
               + '\n' + `to: ${i.to},`
               //+ '\n' + `value: ${i.value} WEI`
