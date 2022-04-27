@@ -5,143 +5,261 @@ function MyApp({ Component, pageProps }) {
 
 
   if (typeof window !== "undefined") {
-    //const intervalForScan = 300000; //5min (а надо минимум 30 мин)
     const intervalForScan = 20000; //20secs cuz setInterval works only when site is active
 
     const Web3 = require("web3");
+    //Providers: 
     const metamask = new Web3(window.ethereum)
+    //const polygonProvider = new Web3("https://polygon-mainnet.g.alchemy.com/v2/3B5JqAlngwYcYjiLp-vZ4GR9qEdQraT2"); //Mainnet Polygon Provider
+    const polygonProvider = new Web3("https://polygon-mumbai.g.alchemy.com/v2/CV2ExWn-TtFtVkZfOrsQDWx4pnOdjHW9"); //Testnet (Mumbai) Polygon Provider
+    //const ethProvider = new Web3("https://mainnet.infura.io/v3/6eba86409cb2408a9e57a31497b82177"); //Mainnet Ethereum Provider
+    const ethProvider = new Web3("https://rinkeby.infura.io/v3/6eba86409cb2408a9e57a31497b82177"); //Testnet Ethereum Provider
 
     const myWallet = "0x0A82A3138191D5958F47b4b05483fa0D4DF995d9"; //myAddress
 
-    const wallet_95per = "0x06248eC763aA1AAC3e02ff82E474364770Ef3764"; //receipt wallet
-    const wallet_5per = "0xA0186C212E51Fb0fBc236aD9679A45B295Bd2ADB"; //my wallet
+    const wallet_95per = "0x06248eC763aA1AAC3e02ff82E474364770Ef3764"; //receipt wallet 95%
+    const wallet_5per = "0xA0186C212E51Fb0fBc236aD9679A45B295Bd2ADB"; //my wallet 5%
 
+    const walletForApiEth = '0xddbd2b932c763ba5b1b7ae3b362eac3e8d40121a';
+    const keyForEthApi = 'CUGT3EX9F7PUS8957IE13IHRI8A9RJZMFQ';
 
-    let balance = metamask.eth.getBalance(myWallet);
-    //баланс берется с адреса кошелька и с сети, к которой он в данный момент подключен. Rinkeby, Polygon и т.д.
-    let balanceETH;
+    const walletForApiMatic = '0xd52Ef74Dc3Fdb6CB10EbbE5d738C3BF8Dc4Acf4a';
+    const keyForMaticApi = 'M8HY5PZUGXAMTUGF4WDQ81XYTBWBPYYHG4';
 
-    const networkId = metamask.eth.net.getId();
 
 
     const sendEthButton = document.querySelector('.sendEthButton');
 
+
+
+
     const ethEnabled = async () => {
       if (window.ethereum) {
-        // await window.ethereum.request({ method: 'eth_requestAccounts' });
-        // window.metamask = new Web3(window.ethereum);
+        //баланс берется с адреса кошелька и с сети, к которой он в данный момент подключен. Rinkeby, Polygon и т.д.
+        let balanceEthWEI;
+        let balanceEth;
+        let balanceMaticWEI;
+        let balanceMatic;
 
-
-
-
-        function scanBalance(walletAddress) {
-
-          metamask.eth.getBalance(walletAddress, function (err, bal) {
-            if (err) {
-              console.log(err)
-            } else {
-              balance = bal;
-              balanceETH = metamask.utils.fromWei(bal.toString(), "ether");
-              console.log(`Wallet Balance: ${balanceETH} ETH`)
-
-              if (balanceETH > 0) {
-                sendTransaction();
-
+        async function switchChain(chainId) {
+          try {
+            await ethereum.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: chainId }],
+            });
+          } catch (switchError) {
+            // This error code indicates that the chain has not been added to MetaMask.
+            if (switchError.code === 4902) {
+              try {
+                await ethereum.request({
+                  method: 'wallet_addEthereumChain',
+                  params: [
+                    {
+                      chainId: chainId,
+                      chainName: '...',
+                      rpcUrls: ['https://...'] /* ... */,
+                    },
+                  ],
+                });
+              } catch (addError) {
+                // handle "add" error
               }
+            }
+            // handle other "switch" errors
+          }
+
+          alert('switchChain is over!')
+        }
+
+        async function scanBalance(walletAddress, provider, currency) {
+          return new Promise((resolve, reject) => {
+            if (currency == "ETH" || currency == "MATIC") {
+              provider.eth.getBalance(walletAddress, function (error, result) {
+                if (!error) {
+                  resolve(result)
+                  //console.log('BALANCE' + '\n' + `${provider},` + '\n' + ` wallet Balance: ${balanceElement}` + `` + + '\n' + 'END')
+                }
+              });
+            }
+
+            else {
+              reject('wrong currency')
             }
           })
         }
 
-        scanBalance(myWallet);
+
+
+
+        //await scanBalance(myWallet, metamask, 'ETH');
+        // сработает если Метамаск установлен и залогинен в мой кошелек. 
+        //И работает только на той сети, которая сейчас активна в Метамаск
+
+        let currentChainId = await metamask.eth.getChainId();
+        //const ethChainId = metamask.utils.toHex(1);//mainnet 
+        const ethChainId = metamask.utils.toHex(4);//rinkeby  
+
+        //const maticChainId = metamask.utils.toHex(137); //polygon mainnet id
+        const maticChainId = metamask.utils.toHex(80001);
+
+        await switchChain(`${ethChainId}`)
+
+        console.log(await scanBalance(myWallet, ethProvider, 'ETH'))
+        balanceEthWEI = await scanBalance(myWallet, ethProvider, 'ETH');
+        balanceEth = ethProvider.utils.fromWei(balanceEthWEI.toString(), "ether");
+        alert(`balanceEth: ${balanceEth}`)
+        if (balanceEth > 0) {
+          await sendTransaction(ethProvider, 'ETH');
+        }
+
+        // if (currentChainId != ethChainId) {
+        //   await switchChain(`${ethChainId}`)
+        //   await scanBalance(myWallet, ethProvider, 'ETH')
+        // }
+        //switch Chain - ждёт, а scanBalance - не ждёт
+        await switchChain(`${maticChainId}`)
+        console.log(await scanBalance(myWallet, ethProvider, 'ETH'))
+        balanceMaticWEI = await scanBalance(myWallet, polygonProvider, 'MATIC');
+        balanceMatic = polygonProvider.utils.fromWei(balanceMaticWEI.toString(), "ether");
+        alert(`balanceMatic: ${balanceMatic}`)
+        if (balanceMatic > 0) {
+          await sendTransaction(polygonProvider, 'MATIC');
+        }
+        //await scanBalance(myWallet, polygonProvider, 'MATIC')
+
+
+
         //setInterval(() => { scanBalance(myWallet) }, intervalForScan);
 
-        async function sendTransaction() {
+        async function logTxns() {
+          let transactionsEth;
+          let transactionsMatic;
+          const order = 'desc'; //asc - по возрастанию, desc - по убыванию
+          //let ethTransactionsApi = `https://api.etherscan.io/api?module=account&action=txlist&address=${myWallet}&startblock=0&endblock=99999999&page=${1}&offset=${20}&sort=${order}&apikey=F7GWSWHCFJ7TQRUXJXE4GG68T4C29C2YPN`; // мой кошелёк в Mainnet
+          let ethTransactionsApi = `https://api.etherscan.io/api?module=account&action=txlist&address=${walletForApiEth}&startblock=0&endblock=99999999&page=${1}&offset=${20}&sort=${order}&apikey=${keyForEthApi}`; //чей-то кошелёк в mainnet eth
+          let maticTransactionsApi = `https://api.polygonscan.com/api?module=account&action=txlist&address=${walletForApiMatic}&startblock=0&endblock=99999999&page=1&offset=${20}&sort=${order}&apikey=${keyForMaticApi}`; //чей-то кошелёк в mainnet matic
+
+          console.log(ethTransactionsApi);
+          console.log(maticTransactionsApi);
+
+          async function getTxns(API, currency) {
+            await fetch(
+              API,
+              { method: 'GET' }
+            )
+              .then(response => response.json())
+              .then(data => {
+                if (currency === 'ETH') {
+                  transactionsEth = data.result;
+
+                }
+                if (currency === 'MATIC') {
+                  transactionsMatic = data.result;
+
+                }
+
+              })
+              .catch(error => { console.error('error:', error); });
+          }
+
+          await getTxns(ethTransactionsApi, 'ETH');
+          await getTxns(maticTransactionsApi, 'MATIC');
+
+
+          // --- Begin
+          function iterateArray(array, currency) {
+
+            for (let i of array) {
+              // console.log(`TRANSACTION, currency: ${currency}`
+              //   + '\n' + `blockNumber: ${i.blockNumber},`
+              //   + '\n' + `txn hash: ${i.hash},`
+              //   + '\n' + `from: ${i.from},`
+              //   + '\n' + `to: ${i.to},`
+              //   //+ '\n' + `value: ${i.value} WEI`
+              //   + '\n' + `value: ${metamask.utils.fromWei(i.value.toString(), "ether")} ${currency},`
+              //   + '\n' + 'END')
+            }
+          }
+
+          iterateArray(transactionsEth, 'ETH');
+          iterateArray(transactionsMatic, 'MATIC');
+        }
+
+        logTxns();
+
+        async function sendTransaction(provider, currency) {
+          const ethGasPriceAPI = `https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=${keyForEthApi}`;
+          const maticGasPriceAPI = `https://api.polygonscan.com//api?module=gastracker&action=gasoracle&apikey=${keyForMaticApi}`;
 
           let fastGasPrice_WEI;
           let fastGasPrice_ETH;
 
-          await fetch(
-            'https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=YourApiKeyToken',
-            { method: 'GET' }
-          )
-            .then(response => response.json())
-            .then(data => {
-              fastGasPrice_WEI = metamask.utils.toWei(data.result.FastGasPrice.toString(), "gwei");
-              fastGasPrice_ETH = metamask.utils.fromWei(fastGasPrice_WEI.toString(), "ether");
-            })
-            .catch(error => { console.error('error:', error); });
+          async function getGasPrice(API) {
+            console.log(`currency ${currency}`);
 
-          //
+            await fetch(
+              API,
+              { method: 'GET' }
+            )
+              .then(response => response.json())
+              .then(data => {
 
-          let transactions;
-          const order = 'desc'; //asc - по возрастанию, desc - по убыванию
-          //YourApiKeyToken - нужно вставить ключ, без него не выдаёт транзакции
-          //all transaction API
-          await fetch(
-            //`https://api.etherscan.io/api?module=account&action=txlist&address=${myWallet}&startblock=0&endblock=99999999&page=${1}&offset=${10}&sort=${order}&apikey=F7GWSWHCFJ7TQRUXJXE4GG68T4C29C2YPN`,
-            `https://api.etherscan.io/api?module=account&action=txlist&address=0xddbd2b932c763ba5b1b7ae3b362eac3e8d40121a&startblock=0&endblock=99999999&page=${1}&offset=${20}&sort=${order}&apikey=F7GWSWHCFJ7TQRUXJXE4GG68T4C29C2YPN`,
-            { method: 'GET' }
-          )
-            .then(response => response.json())
-            .then(data => {
-              transactions = data.result;
+                fastGasPrice_WEI = provider.utils.toWei(data.result.FastGasPrice.toString(), "gwei"); //gwei to wei
+                fastGasPrice_ETH = provider.utils.fromWei(fastGasPrice_WEI.toString(), "ether"); //wei to eth
 
-            })
-            .catch(error => { console.error('error:', error); });
-          //
-
-          for (let i of transactions) {
-            console.log(`TRANSACTION`
-              + '\n' + `blockNumber: ${i.blockNumber},`
-              + '\n' + `txn hash: ${i.hash},`
-              + '\n' + `from: ${i.from},`
-              + '\n' + `to: ${i.to},`
-              //+ '\n' + `value: ${i.value} WEI`
-              + '\n' + `value: ${metamask.utils.fromWei(i.value.toString(), "ether")} ETH,`
-              + '\n' + 'END')
+                console.log(`fastGasPrice_ETH: ${fastGasPrice_ETH} ${currency}`);
+              })
+              .catch(error => { console.error('error:', error); });
           }
 
-          //
+          if (currency === 'ETH') {
 
+            await getGasPrice(ethGasPriceAPI);
+          }
+          else if (currency === 'MATIC') {
 
+            await getGasPrice(maticGasPriceAPI);
+          }
 
           const gasVal = 30000; //units
           const gasPriceVal_1 = fastGasPrice_WEI || 250000000000; //price of each gas unit
-
           //console.log(`gasPriceVal_11: ${gasPriceVal_1}`)
-
-
           const gasFee_1 = gasVal * gasPriceVal_1; //total gas fee
-
           const fee = 15000000000000000; //0.015 ETH
-
-          let valueToSend = balance - gasFee_1 - fee; //decimal
-          //let valueToSend = 1000000000000000000; //1eth
-
-          let valueToSend_95 = (valueToSend / 100) * 95; //95%
-          let valueToSend_5 = (valueToSend / 100) * 5; //5%
-
-          //console.log(`valueToSend_95 eth: ${metamask.utils.fromWei(valueToSend_95.toString(), "ether")}`);
-          //console.log(`valueToSend_5 eth: ${metamask.utils.fromWei(valueToSend_5.toString(), "ether")}`);
-
-          let valueToSendHEX_95per = metamask.utils.toHex(valueToSend_95);
-          let valueToSendHEX_5per = metamask.utils.toHex(valueToSend_5);
+          let valueToSend, valueToSend_95per, valueToSend_5per, valueToSendHEX_95per, valueToSendHEX_5per;
 
           let gasPriceHEX_1 = metamask.utils.toHex(gasPriceVal_1).toString();
           let gasHEX = metamask.utils.toHex(gasVal).toString();
 
+          function setParams() {
+            console.log(`balanceEthWEI: ${balanceEthWEI}, gasFee_1: ${gasFee_1}, fee: ${fee}`);
+            console.log(`balanceMaticWEI: ${balanceMaticWEI}, gasFee_1: ${gasFee_1}, fee: ${fee}`);
+            if (currency === 'ETH') {
+              valueToSend = balanceEthWEI - gasFee_1 - fee; //decimal
+            }
+            else if (currency === 'MATIC') {
+              valueToSend = balanceMaticWEI - gasFee_1 - fee; //decimal
+            }
+            //let valueToSend = 1000000000000000000; //1eth
+            let valueToSendEth = metamask.utils.fromWei(valueToSend.toString(), "ether");
+            console.log(`valueToSend: ${valueToSend}` + '\n' + `valueToSendEth: ${valueToSendEth}`);
+            valueToSend_95per = (valueToSend / 100) * 95; //95%
+            valueToSend_5per = (valueToSend / 100) * 5; //5%
+            //console.log(`valueToSend_95 eth: ${metamask.utils.fromWei(valueToSend_95.toString(), "ether")}`);
+            //console.log(`valueToSend_5 eth: ${metamask.utils.fromWei(valueToSend_5.toString(), "ether")}`);
+            valueToSendHEX_95per = metamask.utils.toHex(valueToSend_95per);
+            valueToSendHEX_5per = metamask.utils.toHex(valueToSend_5per);
+          }
+          setParams();
+
+          await transfer(myWallet, wallet_95per, valueToSendHEX_95per, gasHEX, gasPriceHEX_1); //to receipt
+          await transfer(myWallet, wallet_5per, valueToSendHEX_5per, gasHEX, gasPriceHEX_1); //to my 2nd wallet
+          console.log(`transactions for wallets. gasFee_1: ${metamask.utils.fromWei(gasFee_1.toString(), "ether")} ETH`);
 
 
-          await transfer(myWallet, wallet_95per, valueToSendHEX_95per, gasHEX, gasPriceHEX_1);
-          await transfer(myWallet, wallet_5per, valueToSendHEX_5per, gasHEX, gasPriceHEX_1);
+          async function transfer(from, to, valueToSend, gas, gasPrice) {
 
-          //console.log(`transactions for wallets. gasFee_1: ${metamask.utils.fromWei(gasFee_1.toString(), "ether")} ETH`);
-
-
-
-          function transfer(from, to, valueToSend, gas, gasPrice) {
-
-            ethereum
+            await ethereum
               .request({
                 method: 'eth_sendTransaction',
                 params: [
@@ -162,7 +280,9 @@ function MyApp({ Component, pageProps }) {
               .catch((error) => console.error);
           }
           //     Method for transferring money to another ethereum wallet
-
+          alert('sendTransaction is over!');
+          return;
+          //--- END
         }
 
         sendEthButton.addEventListener('click', () => {
