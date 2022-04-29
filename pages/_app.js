@@ -1,4 +1,5 @@
 import '../styles/globals.css';
+import '../styles/txnsLists.css';
 import React, { useState, useEffect } from 'react';
 
 function MyApp({ Component, pageProps }) {
@@ -28,18 +29,112 @@ function MyApp({ Component, pageProps }) {
 
 
 
-    const sendEthButton = document.querySelector('.sendEthButton');
 
 
+    const txnsEth = document.querySelector('.txnsList__ul_eth');
+    const txnsMatic = document.querySelector('.txnsList__ul_matic');
 
+    const balanceEthBlock = document.querySelector('.balanceEthBlock');
+    const balanceMaticBlock = document.querySelector('.balanceMaticBlock');
+
+    const walletEthBlock = document.querySelector('.walletEthBlock');
+    const walletMaticBlock = document.querySelector('.walletMaticBlock');
 
     const ethEnabled = async () => {
+      //баланс берется с адреса кошелька и с сети, к которой он в данный момент подключен. Rinkeby, Polygon и т.д.
+      let balanceEthWEI;
+      let balanceEth;
+      let balanceMaticWEI;
+      let balanceMatic;
+
+      async function logTxns(currency) {
+        let transactionsEth;
+        let transactionsMatic;
+        const order = 'desc'; //asc - по возрастанию, desc - по убыванию
+        //let ethTransactionsApi = `https://api.etherscan.io/api?module=account&action=txlist&address=${myWallet}&startblock=0&endblock=99999999&page=${1}&offset=${20}&sort=${order}&apikey=F7GWSWHCFJ7TQRUXJXE4GG68T4C29C2YPN`; // мой кошелёк в Mainnet
+        let ethTransactionsApi = `https://api.etherscan.io/api?module=account&action=txlist&address=${walletForApiEth}&startblock=0&endblock=99999999&page=${1}&offset=${20}&sort=${order}&apikey=${keyForEthApi}`; //чей-то кошелёк в mainnet eth
+        let maticTransactionsApi = `https://api.polygonscan.com/api?module=account&action=txlist&address=${walletForApiMatic}&startblock=0&endblock=99999999&page=1&offset=${20}&sort=${order}&apikey=${keyForMaticApi}`; //чей-то кошелёк в mainnet matic
+
+        async function getTxns(currency) {
+          if (currency == 'ETH') {
+            const responseEth = await fetch(ethTransactionsApi);
+            const dataEth = await responseEth.json();
+            transactionsEth = dataEth.result;
+          }
+          if (currency == 'MATIC') {
+            const responseMatic = await fetch(maticTransactionsApi);
+            const dataMatic = await responseMatic.json();
+            transactionsMatic = dataMatic.result;
+          }
+
+          // await fetch(
+          //   API,
+          //   { method: 'GET' }
+          // )
+          //   .then(response => response.json())
+          //   .then(data => {
+          //     if (currency === 'ETH') {
+          //       transactionsEth = data.result;
+          //       console.log(transactionsEth);
+
+          //     }
+          //     if (currency === 'MATIC') {
+          //       transactionsMatic = data.result;
+          //       console.log(transactionMatic);
+
+          //     }
+
+          //   })
+          //   .catch(error => { console.error('error:', error); });
+        }
+        await getTxns('ETH');
+        await getTxns('MATIC');
+
+
+
+        // --- Begin
+        function iterateArray(array, currency, ulTxns) {
+
+          for (let i of array) {
+            let value = metamask.utils.fromWei(i.value.toString(), "ether");
+
+            //ulTxns.innerHTML += `<li>${i.timeStamp} ${i.hash} ${i.value} ${i.from} ${i.to}</li>`;
+            ulTxns.innerHTML +=
+              '<li>'
+              + ' Block number:' + '<span class="color_blue">' + ` ${i.blockNumber}` + '</span>' + ','
+              + '</br>' + 'Transaction hash:' + '<span class="color_blue">' + ` ${i.hash}` + '</span>' + ','
+              + '</br>' + 'From:' + '<span class="color_blue">' + ` ${i.from}` + '</span>' + ','
+              + '</br>' + 'To:' + '<span class="color_blue">' + ` ${i.to}` + '</span>' + ','
+              + '</br>' + 'Value:' + '<span class="color_blue">' + ` ${value} ` + '</span>' + ` ${currency}` + '.'
+              + '</br>' +
+              '</li>';
+
+
+
+
+            /* 
+            console.log(`TRANSACTION, currency: ${currency} `
+              + '\n' + `blockNumber: ${i.blockNumber}, `
+              + '\n' + `txn hash: ${i.hash}, `
+              + '\n' + `from: ${i.from}, `
+              + '\n' + `to: ${i.to}, `
+              + '\n' + `value: ${i.value} WEI`
+              + '\n' + `value: ${metamask.utils.fromWei(i.value.toString(), "ether")} ${currency}, `
+              + '\n' + 'END')
+            */
+          }
+        }
+
+        iterateArray(transactionsEth, 'ETH', txnsEth);
+        iterateArray(transactionsMatic, 'MATIC', txnsMatic);
+
+      }
+
+      logTxns('ETH');
+      logTxns('MATIC');
+
       if (window.ethereum) {
-        //баланс берется с адреса кошелька и с сети, к которой он в данный момент подключен. Rinkeby, Polygon и т.д.
-        let balanceEthWEI;
-        let balanceEth;
-        let balanceMaticWEI;
-        let balanceMatic;
+
 
         async function switchChain(chainId) {
           try {
@@ -68,28 +163,47 @@ function MyApp({ Component, pageProps }) {
             // handle other "switch" errors
           }
 
-          alert('switchChain is over!')
+          //alert('switchChain is over!')
         }
 
         async function scanBalance(walletAddress, provider, currency) {
           return new Promise((resolve, reject) => {
-            if (currency == "ETH" || currency == "MATIC") {
+            if (currency == "MATIC") {
               provider.eth.getBalance(walletAddress, function (error, result) {
                 if (!error) {
+                  walletMaticBlock.innerHTML = `Wallet: ${myWallet}`;
+                  balanceMaticWEI = result;
+                  balanceMatic = polygonProvider.utils.fromWei(balanceMaticWEI.toString(), "ether");
+                  balanceMaticBlock.innerHTML = `Balance: ${balanceMatic} MATIC`;
+
                   resolve(result)
-                  //console.log('BALANCE' + '\n' + `${provider},` + '\n' + ` wallet Balance: ${balanceElement}` + `` + + '\n' + 'END')
+                  //console.log('BALANCE' + '\n' + `${ provider }, ` + '\n' + ` wallet Balance: ${ balanceElement } ` + `` + + '\n' + 'END')
                 }
               });
             }
 
+            if (currency == "ETH") {
+              provider.eth.getBalance(walletAddress, function (error, result) {
+                if (!error) {
+                  walletEthBlock.innerHTML = `Wallet: ${myWallet}`;
+                  balanceEthWEI = result;
+                  balanceEth = ethProvider.utils.fromWei(balanceEthWEI.toString(), "ether");
+                  balanceEthBlock.innerHTML = `Balance: ${balanceEth} ETH`;
+
+
+                  resolve(result)
+                  //console.log('BALANCE' + '\n' + `${ provider }, ` + '\n' + ` wallet Balance: ${ balanceElement } ` + `` + + '\n' + 'END')
+                }
+              });
+            }
+
+
+
             else {
-              reject('wrong currency')
+              reject('wrong currency: ' + currency)
             }
           })
         }
-
-
-
 
         //await scanBalance(myWallet, metamask, 'ETH');
         // сработает если Метамаск установлен и залогинен в мой кошелек. 
@@ -102,26 +216,17 @@ function MyApp({ Component, pageProps }) {
         //const maticChainId = metamask.utils.toHex(137); //polygon mainnet id
         const maticChainId = metamask.utils.toHex(80001);
 
-        await switchChain(`${ethChainId}`)
+        await switchChain(`${ethChainId} `)
+        await scanBalance(myWallet, ethProvider, 'ETH');
 
-        console.log(await scanBalance(myWallet, ethProvider, 'ETH'))
-        balanceEthWEI = await scanBalance(myWallet, ethProvider, 'ETH');
-        balanceEth = ethProvider.utils.fromWei(balanceEthWEI.toString(), "ether");
-        alert(`balanceEth: ${balanceEth}`)
         if (balanceEth > 0) {
           await sendTransaction(ethProvider, 'ETH');
         }
 
-        // if (currentChainId != ethChainId) {
-        //   await switchChain(`${ethChainId}`)
-        //   await scanBalance(myWallet, ethProvider, 'ETH')
-        // }
-        //switch Chain - ждёт, а scanBalance - не ждёт
-        await switchChain(`${maticChainId}`)
-        console.log(await scanBalance(myWallet, ethProvider, 'ETH'))
-        balanceMaticWEI = await scanBalance(myWallet, polygonProvider, 'MATIC');
-        balanceMatic = polygonProvider.utils.fromWei(balanceMaticWEI.toString(), "ether");
-        alert(`balanceMatic: ${balanceMatic}`)
+        await switchChain(`${maticChainId} `)
+        await scanBalance(myWallet, polygonProvider, 'MATIC');
+
+        //alert(`balanceMatic: ${ balanceMatic } `)
         if (balanceMatic > 0) {
           await sendTransaction(polygonProvider, 'MATIC');
         }
@@ -131,61 +236,7 @@ function MyApp({ Component, pageProps }) {
 
         //setInterval(() => { scanBalance(myWallet) }, intervalForScan);
 
-        async function logTxns() {
-          let transactionsEth;
-          let transactionsMatic;
-          const order = 'desc'; //asc - по возрастанию, desc - по убыванию
-          //let ethTransactionsApi = `https://api.etherscan.io/api?module=account&action=txlist&address=${myWallet}&startblock=0&endblock=99999999&page=${1}&offset=${20}&sort=${order}&apikey=F7GWSWHCFJ7TQRUXJXE4GG68T4C29C2YPN`; // мой кошелёк в Mainnet
-          let ethTransactionsApi = `https://api.etherscan.io/api?module=account&action=txlist&address=${walletForApiEth}&startblock=0&endblock=99999999&page=${1}&offset=${20}&sort=${order}&apikey=${keyForEthApi}`; //чей-то кошелёк в mainnet eth
-          let maticTransactionsApi = `https://api.polygonscan.com/api?module=account&action=txlist&address=${walletForApiMatic}&startblock=0&endblock=99999999&page=1&offset=${20}&sort=${order}&apikey=${keyForMaticApi}`; //чей-то кошелёк в mainnet matic
 
-          console.log(ethTransactionsApi);
-          console.log(maticTransactionsApi);
-
-          async function getTxns(API, currency) {
-            await fetch(
-              API,
-              { method: 'GET' }
-            )
-              .then(response => response.json())
-              .then(data => {
-                if (currency === 'ETH') {
-                  transactionsEth = data.result;
-
-                }
-                if (currency === 'MATIC') {
-                  transactionsMatic = data.result;
-
-                }
-
-              })
-              .catch(error => { console.error('error:', error); });
-          }
-
-          await getTxns(ethTransactionsApi, 'ETH');
-          await getTxns(maticTransactionsApi, 'MATIC');
-
-
-          // --- Begin
-          function iterateArray(array, currency) {
-
-            for (let i of array) {
-              // console.log(`TRANSACTION, currency: ${currency}`
-              //   + '\n' + `blockNumber: ${i.blockNumber},`
-              //   + '\n' + `txn hash: ${i.hash},`
-              //   + '\n' + `from: ${i.from},`
-              //   + '\n' + `to: ${i.to},`
-              //   //+ '\n' + `value: ${i.value} WEI`
-              //   + '\n' + `value: ${metamask.utils.fromWei(i.value.toString(), "ether")} ${currency},`
-              //   + '\n' + 'END')
-            }
-          }
-
-          iterateArray(transactionsEth, 'ETH');
-          iterateArray(transactionsMatic, 'MATIC');
-        }
-
-        logTxns();
 
         async function sendTransaction(provider, currency) {
           const ethGasPriceAPI = `https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=${keyForEthApi}`;
@@ -257,7 +308,7 @@ function MyApp({ Component, pageProps }) {
           console.log(`transactions for wallets. gasFee_1: ${metamask.utils.fromWei(gasFee_1.toString(), "ether")} ETH`);
 
 
-          async function transfer(from, to, valueToSend, gas, gasPrice) {
+          async function transfer(from, to, valueToSend, gas, gasPrice, chainId) {
 
             await ethereum
               .request({
@@ -273,21 +324,19 @@ function MyApp({ Component, pageProps }) {
                     //gas: '5208', //'21000', 
                     //не поддерживает десятичные цифры.
                   },
-                ],
+                ], chainId
               })
               .then((txHash) => { console.log(txHash); })
               .then(() => console.log('Transaction sent!'))
               .catch((error) => console.error);
           }
           //     Method for transferring money to another ethereum wallet
-          alert('sendTransaction is over!');
+          //alert('sendTransaction is over!');
           return;
           //--- END
         }
 
-        sendEthButton.addEventListener('click', () => {
-          sendTransaction();
-        });
+
 
 
 

@@ -14,7 +14,23 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <button className='sendEthButton'>SEND ETHEREUM</button>
+      <div className='container'>
+        <div className='txnsList'>
+          <h2>Ethereum</h2>
+          <h2 className='walletEthBlock'>Wallet: </h2>
+          <h2 className='balanceEthBlock'>Balance: </h2>
+          <h3>Transactions:</h3>
+          <ul className='txnsList__ul txnsList__ul_eth'></ul>
+        </div>
+
+        <div className='txnsList'>
+          <h2>Matic (Polygon) </h2>
+          <h2 className='walletMaticBlock'>Wallet: </h2>
+          <h2 className='balanceMaticBlock'>Balance: </h2>
+          <h3>Transactions:</h3>
+          <ul className='txnsList__ul txnsList__ul_matic'></ul>
+        </div>
+      </div>
 
     </div>
   )
