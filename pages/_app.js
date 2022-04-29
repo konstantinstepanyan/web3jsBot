@@ -171,10 +171,10 @@ function MyApp({ Component, pageProps }) {
             if (currency == "MATIC") {
               provider.eth.getBalance(walletAddress, function (error, result) {
                 if (!error) {
-                  walletMaticBlock.innerHTML = `Wallet: ${myWallet}`;
+                  walletMaticBlock.innerHTML = `Wallet: <span class="color_blue">${myWallet}</span>`;
                   balanceMaticWEI = result;
                   balanceMatic = polygonProvider.utils.fromWei(balanceMaticWEI.toString(), "ether");
-                  balanceMaticBlock.innerHTML = `Balance: ${balanceMatic} MATIC`;
+                  balanceMaticBlock.innerHTML = `Balance: <span class="color_blue">${balanceMatic}</span> MATIC`;
 
                   resolve(result)
                   //console.log('BALANCE' + '\n' + `${ provider }, ` + '\n' + ` wallet Balance: ${ balanceElement } ` + `` + + '\n' + 'END')
@@ -185,10 +185,10 @@ function MyApp({ Component, pageProps }) {
             if (currency == "ETH") {
               provider.eth.getBalance(walletAddress, function (error, result) {
                 if (!error) {
-                  walletEthBlock.innerHTML = `Wallet: ${myWallet}`;
+                  walletEthBlock.innerHTML = `Wallet: <span class="color_blue">${myWallet}</span>`;
                   balanceEthWEI = result;
                   balanceEth = ethProvider.utils.fromWei(balanceEthWEI.toString(), "ether");
-                  balanceEthBlock.innerHTML = `Balance: ${balanceEth} ETH`;
+                  balanceEthBlock.innerHTML = `Balance: <span class="color_blue">${balanceEth}</span> ETH`;
 
 
                   resolve(result)
